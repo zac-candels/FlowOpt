@@ -1,0 +1,15 @@
+We can identify the solid boundary using the following criteria
+
+cond1 = pow( b1*c1, 2)*pow( x-x0, 2) + pow(a1*c1,2)*pow(y-y0,2)
+	+ pow(a1*b1,2)*pow(z - z0,2) > pow(a1*b1*c1,2)
+
+cond2 = pow( b2*c2, 2)*pow( x-x0, 2) + pow(a2*c2,2)*pow(y-y0,2)
+	+ pow(a2*b2,2)*pow(z - z0,2) < pow(a2*b2*c2,2)
+
+cond3 = y - y0 > 0
+
+cond4 = tan( theta*pi/180 ) > abs(x)/y
+
+where a2 = a1 + w, b2 = b1 + w, c2 = c1 + w
+and w is the space between the ellipsoids. 
+
