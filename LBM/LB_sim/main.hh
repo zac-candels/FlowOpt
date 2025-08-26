@@ -17,7 +17,7 @@ double surfacetension = sqrt(2 * A * kappa) / 6;  // Surface tension in lattice 
 double interfacewidth = sqrt(8 * kappa / A);      // Width of the diffuse interface between fluids
 double posx = 0.0;        // Droplet position in the x direction
 double posy = 0.0;        // Droplet position in the y direction
-//double posz = 0.0;        // Droplet position in the z direction, uncomment for full 3D
+double posz = 0.0;        // Droplet position in the z direction, uncomment for full 3D
 double dens1 = 1;         // Droplet density
 double dens2 = 1;         // Air density
 double bodyforcex = 0;    // Magnitude of body force acting on the droplet in the x direction
@@ -77,11 +77,11 @@ double initFluid(const int k) {
     // y coordinate of the lattice node k
     int yy = computeY(ly, lz, k);
     // z coordinate of the lattice node k
-    //int zz = computeZ(ly, lz, k); // Uncomment for 3D
+    int zz = computeZ(ly, lz, k); // Uncomment for 3D
 
     // Radial distance from the centre of the droplet at (posx, posy)
-    double rr2 = (xx - posx) * (xx - posx) + (yy - posy) * (yy - posy);
-    // Double rr2 = (xx - posx) * (xx - posx) + (yy - posy) * (yy - posy) + (zz - posz) * (zz - posz); // Switch these for 3D
+    //double rr2 = (xx - posx) * (xx - posx) + (yy - posy) * (yy - posy);
+    double rr2 = (xx - posx) * (xx - posx) + (yy - posy) * (yy - posy) + (zz - posz) * (zz - posz); // Switch these for 3D
 
     // Smooth droplet
     return (0.5 - 0.5 * tanh(2 * (sqrt(rr2) - radius) / (4.0))) * // Circle with given radius
@@ -108,7 +108,7 @@ void initParams(std::string inputfile) {
     params.addParameter<double>(interfacewidth, "interfacewidth");
     params.addParameter<double>(posx, "posx");
     params.addParameter<double>(posy, "posy");
-    //params.addParameter<double>(posz, "posz"); // Uncomment for 3D
+    params.addParameter<double>(posz, "posz"); // Uncomment for 3D
     params.addParameter<double>(dens1, "dens1");
     params.addParameter<double>(dens2, "dens2");
     params.addParameter<double>(tau1, "tau1");
