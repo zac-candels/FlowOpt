@@ -2,9 +2,11 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.optimize import root
 
+# In this program, S1 and S2 correspond to the arclengths of the ratchet 
+# in the xz and xy planes. 
 
-#%% Compute a, b, c, from alpha, R1, R2, theta
-def F(vars, alpha, R1, R2):
+#%% Compute a, b, c, from alpha, S1, S2, theta
+def F(vars, alpha, S1, S2):
     a, c, theta = vars
 
     # Eqn 1
@@ -13,17 +15,17 @@ def F(vars, alpha, R1, R2):
     # Eqn 2
     integrand1 = lambda z: np.sqrt(1 + (a**2/c**2 - 1) * np.sin(z)**2)
     I1, _ = quad(integrand1, np.pi/2, 0)
-    f2 = -c * I1 - R1
+    f2 = -c * I1 - S1
 
     # Eqn 3
-    f3 = a*theta - R2
+    f3 = a*theta - S2
 
     return np.array([f1, f2, f3])
 
 # Example parameters
 alpha = 48.37*np.pi/180
-R1 = 66.82
-R2 = 27.92
+S1 = 66.82
+s2 = 27.92
 
 # Initial guess
 
@@ -49,7 +51,7 @@ alpha = np.arctan(c/a)*180/np.pi
 
 integrand1 = lambda z: np.sqrt(1 + (a**2/c**2 - 1) * np.sin(z)**2)
 I1, _ = quad(integrand1, np.pi/2, 0)
-R1 = -c * I1
+S1 = -c * I1
 
-R2 = a*theta
+S2 = a*theta
 
