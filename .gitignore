@@ -1,3 +1,3 @@
 *.vtk
 **/figures*
-
+**/test_opt*

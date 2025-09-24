@@ -81,3 +81,4 @@ with open(vtk_file, "w") as f:
         f.write(f"3 {face[0]} {face[1]} {face[2]}\n")
 
 print(f"✅ Wrote VTK file: {vtk_file}")
+
