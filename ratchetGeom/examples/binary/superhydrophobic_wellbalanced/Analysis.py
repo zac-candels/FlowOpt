@@ -33,6 +33,7 @@ outDirName = "figures"
 os.system("mkdir -p %s"%outDirName)
 
 initialInterfacePos = 0
+spread_dist = 0.0
 
 for t in range(tstart, tend + 1, tinc):
 
@@ -90,7 +91,15 @@ for t in range(tstart, tend + 1, tinc):
             if orderParam[j, i] > 0.3 and orderParam[j, i] < 0.7:
                 if i > interface_pos:
                     interface_pos = i
-    print("Interface position is", interface_pos, "\n")
+    
+    if t == tstart:
+        initialInterfacePos = interface_pos
+    if t > tstart:
+        spread_dist = interface_pos - initialInterfacePos
+
+    print("Interface position is", interface_pos)
+
+    print("Spread distance = ", spread_dist, "\n")
         
     
                 
