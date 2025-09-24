@@ -1,0 +1,15 @@
+lx=200 #simulation size in x direction
+ly=150 #simulation size in y direction
+saveInterval=100 #how frequently to save order parameter, velocity etc
+timesteps=5000 #total number of iterations
+radius1=37 #droplet radius1
+radius2=25 #droplet radius2
+spacing=68
+datadir="data/" #data directory
+interfacewidth=4 #width of the diffuse interface between fluids
+surfacetension01=0.003 #surface tension between droplet and lower fluid
+surfacetension02=0.001 #surface tension between droplet and upper fluid
+surfacetension12=0.001 #surface tension between upper and lower fluid
+tau0=0.8 #relaxation time of droplet
+tau1=0.8 #relaxation time of lower fluid
+tau2=0.53 #relaxation time of upper fluid

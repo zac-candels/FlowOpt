@@ -1,0 +1,16 @@
+lx=150
+ly=100
+lz=1
+saveInterval=5000
+timesteps=50000
+datadir="data2/"
+s01=0.001
+s02=0.001
+s12=0.001
+interfacewidth=4
+radius=30
+dens3=1
+dens2=1
+tau1=1.0
+tau2=1.0
+tau3=1.0
