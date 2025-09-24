@@ -1,13 +1,9 @@
 """
-Workflow per evaluation:
+What happens in each iteration of optimization procedure:
  1. Write `input.txt` with current parameters.
  2. Run C++ simulation (e.g. `./run.exe`).
  3. Read in value output by the c++ function
  4. Parse and return objective.
-
-Includes two variants:
-  - `bayes_opt` (bayesian-optimization package)
-  - `skopt` (`scikit-optimize` package)
 """
 import subprocess
 import numpy as np
