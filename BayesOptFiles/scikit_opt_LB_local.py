@@ -20,12 +20,12 @@ def run_simulation(theta: float, postfraction: float) -> float:
     4) Return hysteresis (higher = better)
     """
     
-    path_to_input_cpp1 = "/home/zcandels/FlowOpt/LBM"
+    path_to_input_cpp1 = "../LBM2D"
     path_to_input_cpp2 = "/LB_sim"
     
     full_path = path_to_input_cpp1 + path_to_input_cpp2
 
-    full_path = "./LBM/LB_sim"
+    full_path = "../LBM2D/test_opt_areaFraction_CA"
     
     
     with open(full_path + '/input.txt', 'r') as f:
@@ -64,8 +64,7 @@ def run_simulation(theta: float, postfraction: float) -> float:
     
     # 3) run Python analysis
     analysis = subprocess.run(
-    ['python', 'centroid_velocity.py'],      # just the script name
-    cwd=full_path,                  # <-- now datadir="data/" lives here
+    ['python', 'centroid_velocity.py'],      # just the script name                  # <-- now datadir="data/" lives here
     capture_output=True,
     text=True,
     timeout=120
@@ -106,8 +105,8 @@ def print_best_so_far(res):
 
 # Search space
 search_space = [
-    Real(0, 150, name='theta'),
-    Real(0, 1, name='postfraction')
+    Real(80, 100, name='theta'),
+    Real(0.1, 0.9, name='postfraction')
 ]
 
 def objective_sk(params):
