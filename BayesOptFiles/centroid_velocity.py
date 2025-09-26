@@ -18,8 +18,9 @@ def read_params(path):
     return params
 
 # Usage
-path = "../LBM2D/test_opt_areaFraction_CA/input.txt"
-params = read_params(path)
+path = "../LBM2D/LB_sim"
+path_input = path + "/input.txt"
+params = read_params(path_input)
 saveInterval = params["saveInterval"]
 Num_steps   = params["timesteps"]
 
@@ -133,7 +134,7 @@ def interpolate_y_direction(pts_y, pts_phi):
 plt.close('all')
 
 # Directory where data is stored
-datadir = "../LBM2D/test_opt_areaFraction_CA/data/"
+datadir = path + "/data/"
 
 # Open the Header file
 HeaderFile = open(datadir+"Header.mat", 'rb')

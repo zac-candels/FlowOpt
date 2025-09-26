@@ -47,7 +47,7 @@ def run_simulation(theta: float, postfraction: float) -> float:
 
     # 2) run C++ simulation
     sim = subprocess.run(
-    ['sbatch submit.slurm'],
+    ["sbatch", "submit.slurm"],
     capture_output=True,
     text=True,
     cwd=full_path      # <-- ensure run.exe sees the right input.txt
@@ -136,5 +136,4 @@ def run_skopt():
     print(f"Max value={-result.fun:.4f}")
 
 
-if __name__ == '__main__':
-        run_skopt()
+run_skopt()

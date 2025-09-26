@@ -1,3 +1,5 @@
 *.vtk
+*.log
+*.out
 **/figures*
 **/test_opt*
