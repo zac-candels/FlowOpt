@@ -47,7 +47,7 @@ def run_simulation(theta: float, postfraction: float) -> float:
 
     # 2) run C++ simulation
     sim = subprocess.run(
-    ['./run.exe'],
+    ['sbatch submit.slurm'],
     capture_output=True,
     text=True,
     cwd=full_path      # <-- ensure run.exe sees the right input.txt
