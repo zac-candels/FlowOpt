@@ -68,7 +68,6 @@ def run_simulation(theta: float, postfraction: float) -> float:
     # --- Step 4: Run analysis script ---
     analysis = subprocess.run(
         ["python", "centroid_velocity.py"],
-        cwd=full_path,
         capture_output=True,
         text=True,
         timeout=300
