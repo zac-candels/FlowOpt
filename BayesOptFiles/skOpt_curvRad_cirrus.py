@@ -13,12 +13,12 @@ import time
 
 # --- Utility: run one simulation & analysis ---
 
-def run_simulation(a1: float, b1: float, c1: float) -> float:
+def run_simulation(tilt_angle: float, R2: float, R_curv: float, angular_width: float) -> float:
     """
     Run one simulation via SLURM, wait until it finishes, then run analysis.
     Returns: negative velocity (for minimization in gp_minimize).
     """
-    full_path = "../ratchetGeom/examples/binary/superhydrophobic_wellbalanced"
+    full_path = "../ratchetGeom/curvatureRadiusParametrization"
 
     # --- Step 1: Write input.txt ---
     with open(os.path.join(full_path, 'input.txt'), 'r') as f:
@@ -26,12 +26,14 @@ def run_simulation(a1: float, b1: float, c1: float) -> float:
 
     new_lines = []
     for line in lines:
-        if line.strip().startswith("a1="):
-            new_lines.append(f"a1={a1:.2f} \n")
-        elif line.strip().startswith("b1="):
-            new_lines.append(f"b1={b1:.2f} \n")
-        elif line.strip().startswith("c1="):
-            new_lines.append(f"c1={c1:.2f} \n")
+        if line.strip().startswith("tilt_angle="):
+            new_lines.append(f"tilt_angle={tilt_angle:.2f} \n")
+        elif line.strip().startswith("R2="):
+            new_lines.append(f"R2={R2:.2f} \n")
+        elif line.strip().startswith("R_curv="):
+            new_lines.append(f"R_curv={R_curv:.2f} \n")
+        elif line.strip().startswith("angular_width="):
+            new_lines.append(f"angular_width={angular_width:.2f} \n")
         else:
             new_lines.append(line)
 
@@ -52,7 +54,6 @@ def run_simulation(a1: float, b1: float, c1: float) -> float:
     if not m:
         raise RuntimeError(f"Couldn't parse job ID from sbatch output: {submit.stdout}")
     job_id = m.group(1)
-    print(f"[run_simulation] Submitted job {job_id} for a1={a1:.2f}, b1={b1:.2f}, c1={c1:.2f}")
 
     # --- Step 3: Wait until job completes ---
     while True:
@@ -100,21 +101,22 @@ def print_best_so_far(res):
     current_best_idx = int(np.argmin(res.func_vals))
     current_best_val = -res.func_vals[current_best_idx]
     current_best_params = res.x_iters[current_best_idx]
-    a1, b1, c1 = current_best_params
-    print(f"[Iter {len(res.func_vals)}] Best objective so far: {current_best_val:.4f} at (a1={a1:.2f}, b1={b1:.2f}, c1={c1:.2f})")
+    tilt_angle, R2, R_curv, angular_width = current_best_params
+    print(f"[Iter {len(res.func_vals)}] Best objective so far: {current_best_val:.4f} at (tilt_angle={tilt_angle:.2f}, R2={R2:.2f}, R_curv={R_curv:.2f}), angular_width={angular_width:.2f}")
 
 
 # Search space
 search_space = [
-    Real(3, 20, name='a1'),
-    Real(3, 20, name='b1'),
-    Real(3, 20, name='c1')
+    Real(5, 80, name='tilt_angle'),
+    Real(0.1, 5, name='R2'),
+    Real(0.2, 1.0, name='R_curv'),
+    Real(10, 60, name='angular_width')
 ]
 
 def objective_sk(params):
-    a1, b1, c1 = params
+    tilt_angle, R2, R_curv, angular_width = params
     try:
-        val = run_simulation(a1, b1, c1)
+        val = run_simulation(tilt_angle, R2, R_curv, angular_width)
     except Exception as e:
         print(f"Error at {params}: {e}")
         return 1e6
@@ -132,9 +134,9 @@ def run_skopt():
         random_state=42,
         callback=[print_best_so_far]  # <-- Use your callback here
     )
-    a1, b1, c1 = result.x
+    tilt_angle, R2, R_curv, angular_width = result.x
     print("== skopt best ==")
-    print(f"a1={a1:.2e}, b1={b1:.2e}, c1={c1:.2e}")
+    print(f"tilt_angle={tilt_angle:.2e}, R2={R2:.2e}, R_curv={R_curv:.2e}, angular_width={angular_width:.2e}")
     print(f"Max value={-result.fun:.4f}")
 
 
