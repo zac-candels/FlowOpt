@@ -9,36 +9,7 @@ import subprocess
 import numpy as np
 import os
 import re
-import shlex
 import time
-
-def wait_for_job(job_id: str, poll_interval: int = 60):
-    """
-    Wait until the SLURM job with job_id has finished.
-    Polls every poll_interval seconds.
-    """
-    while True:
-        check = subprocess.run(
-            ["sacct", "-j", job_id, "--format=JobID,State", "--noheader"],
-            capture_output=True,
-            text=True
-        )
-        lines = check.stdout.strip().splitlines()
-        if not lines:
-            # Job not found yet, still pending
-            time.sleep(poll_interval)
-            continue
-
-        # Get state of the job
-        state = lines[0].split()[1]
-        if state == "COMPLETED":
-            print(f"Job {job_id} finished successfully.")
-            break
-        elif state in ["FAILED", "CANCELLED", "TIMEOUT"]:
-            raise RuntimeError(f"SLURM job {job_id} failed with state {state}")
-        else:
-            # Job still running or pending
-            time.sleep(poll_interval)
 
 # --- Utility: run one simulation & analysis ---
 
@@ -74,11 +45,8 @@ def run_simulation(tilt_angle: float, R2: float, R_curv: float, angular_width: f
         ["sbatch", "submit.slurm"],
         cwd=full_path,
         capture_output=True,
-        text=True,
-        shell=True
+        text=True
     )
-    print(submit.stdout)
-    print(submit.stderr)
     submit.check_returncode()
 
     # Example output: "Submitted batch job 12345"
@@ -86,42 +54,28 @@ def run_simulation(tilt_angle: float, R2: float, R_curv: float, angular_width: f
     if not m:
         raise RuntimeError(f"Couldn't parse job ID from sbatch output: {submit.stdout}")
     job_id = m.group(1)
+    print(f"[run_simulation] Submitted job {job_id}")
 
     # --- Step 3: Wait until job completes ---
-    wait_for_job(job_id)
-    # while True:
-    # # Check job state via sacct
-    #     check = subprocess.run(
-    #         ["sacct", "-j", job_id, "--format=JobID,State", "--noheader"],
-    #         capture_output=True,
-    #         text=True
-    #     )
-    #     state_lines = check.stdout.strip().splitlines()
-    #     if not state_lines:
-    #         # Job not found yet, still pending
-    #         time.sleep(30)
-    #         continue
-    #     # Example output: "7561180 COMPLETED"
-    #     state = state_lines[0].split()[1]
-    #     if state in ["COMPLETED"]:
-    #         break
-    #     elif state in ["FAILED", "CANCELLED", "TIMEOUT"]:
-    #         raise RuntimeError(f"SLURM job {job_id} failed with state {state}")
-    #     else:
-    #         time.sleep(30)
+    while True:
+        check = subprocess.run(
+            ["squeue", "-j", job_id],
+            capture_output=True,
+            text=True
+        )
+        if job_id not in check.stdout:
+            break  # job finished
+        time.sleep(5)  # wait 5 seconds before checking again
 
     print(f"[run_simulation] Job {job_id} finished. Running analysis...")
 
     # --- Step 4: Run analysis script ---
     analysis = subprocess.run(
         ["python", "Analysis.py"],
-        cwd=full_path,
         capture_output=True,
         text=True,
         timeout=300
     )
-    print("submit.stdout:", submit.stdout)
-    print("submit.stderr:", submit.stderr)
     analysis.check_returncode()
 
     lines = analysis.stdout.strip().splitlines()
@@ -151,13 +105,15 @@ def print_best_so_far(res):
     print(f"[Iter {len(res.func_vals)}] Best objective so far: {current_best_val:.4f} at (tilt_angle={tilt_angle:.2f}, R2={R2:.2f}, R_curv={R_curv:.2f}), angular_width={angular_width:.2f}")
 
 
+
 # Search space
 search_space = [
-    Real(45, 50, name='tilt_angle'),
-    Real(0.39, 0.41, name='R2'),
-    Real(0.7, 0.8, name='R_curv'),
-    Real(42, 45, name='angular_width')
+    Real(5, 80, name='tilt_angle'),
+    Real(0.1, 5, name='R2'),
+    Real(0.2, 1.0, name='R_curv'),
+    Real(10, 60, name='angular_width')
 ]
+
 
 def objective_sk(params):
     tilt_angle, R2, R_curv, angular_width = params
