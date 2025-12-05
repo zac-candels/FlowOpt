@@ -51,13 +51,15 @@ def postProcess(data_path: str):
 
     n_idx = Num_steps - saveInterval
 
-    HeaderFile = open(data_path + "/Header.mat", 'rb')
+    HeaderFile = open(data_path + "/data/Header.mat", 'rb')
     LX = struct.unpack('=i', HeaderFile.read(4))[0]
     # Read the next 4 bytes...
     LY = struct.unpack('=i', HeaderFile.read(4))[0]
     LZ = struct.unpack('=i', HeaderFile.read(4))[0]
     # 2D or 3D
     ndim = struct.unpack('=i', HeaderFile.read(4))[0]
+
+    endExperimentalRegion = int(LX - LX/3)
 
     pattern_bdy = re.compile("BoundaryLabels_t" + str(n_idx) + ".mat")
     pattern_phi = re.compile("OrderParameter_t" + str(n_idx) + ".mat")
@@ -69,19 +71,15 @@ def postProcess(data_path: str):
                 
 
     # File containing boundary ids
-    file_name_bdy = os.path.join(data_path, "BoundaryLabels_t" + str(n_idx) + ".mat")
+    file_name_bdy = data_path + "/data/BoundaryLabels_t" + str(n_idx) + ".mat"
     FileSolid = open(file_name_bdy, 'rb')
     dat=FileSolid.read()
 
 
 
-    file_name_phi = os.path.join(data_path, "OrderParameter_t" + str(n_idx) + ".mat")
+    file_name_phi = data_path + "/data/OrderParameter_t" + str(n_idx) + ".mat"
     File_phi = open(file_name_phi, 'rb')
     dat = File_phi.read()
-
-    # Fill a numpy array of dimensions (LX,LY,LZ) with the data from the file in the format '=i' (integer). (4*LY*LZ,4*LZ,4) are steps taken in bytes for each dimension. E.g in the z direction we move 4 bytes to the next z value, in the y direction we move 4 bytes * the number of z values to the next y value, etc.
-    solid = np.ndarray((LX, LY, LZ), '=i', dat, 0, (4 * LY * LZ, 4 * LZ, 4))
-    FileSolid.close()
 
     phi = np.ndarray((LX, LY, LZ), '=d', dat, 0, (8 * LY * LZ, 8 * LZ, 8))
     liquid = np.array(phi[:,:])
@@ -89,21 +87,22 @@ def postProcess(data_path: str):
     # liquid[np.where(np.logical_or(solid == 1, solid == -1))[0], np.where(np.logical_or(solid == 1, solid == -1))[1], np.where(np.logical_or(solid == 1, solid == -1))[2]] = 0.
     # liquid[np.where(np.logical_or(solid == 3, solid == 2))[0], np.where(np.logical_or(solid == 3, solid == 2))[1], np.where(np.logical_or(solid == 3, solid == 2))[2]] = 0.
     File_phi.close()
-    phi = liquid[:,:,0]
+    phi = np.zeros([LX, LY])
 
+    phi[:,:] = liquid[:,:,zslice]
 
-    CL_pos = []
-    for i in range(len(phi[:,0])):
-        for j in range(len(phi[0,:])):
-            if( i > posx ):
-                if( j >= postHeight and j <= postHeight + 1):
-                    if( phi[i,j] > 0.4 and phi[i,j] < 0.6 ):
-                        CL_pos.append(i)
-    CL_pos = np.asarray(CL_pos)
-    largest_CL_vals = np.sort(CL_pos)[-10:] # Get the 10 values with the largest x-values
-    CL_pos = np.mean(largest_CL_vals)
+    initialInterfacePos = 0.0
+    interface_pos = 0.0
+    for i in range( len(orderParam_compute[1:int(LX/2),0]) ):
+        for j in range( len(orderParam_compute[0, :]) ):
+            if phi[i, j] > 0.3 and phi[i, j] < 0.7:
+                if i > interface_pos:
+                    interface_pos = float(i)
+    
+    
+    spread_dist = float(interface_pos) - initialInterfacePos
 
-    return CL_pos
+    return spread_dist
 
     # with open(data_path, 'r') as f:
     #     lines = [line.strip() for line in f if line.strip()]
@@ -125,13 +124,13 @@ def objective(X: torch.Tensor) -> torch.Tensor:
         tilt_angle = float(x[0].item())
         R2 = float(x[1].item())
         R_curv = float(x[2].item())
-        angular_width = float(x[2].item())
+        angular_width = float(x[3].item())
 
         path_to_LBM = "../ratchetGeom/curvatureRadiusParametrization"
-        os.makedirs(path_to_LBM + "/data", exist_ok=True)
+        os.makedirs(path_to_LBM + "/job_dirs", exist_ok=True)
 
         # Create new directory where we will place updated input file, executable and slurm file
-        runDirName = path_to_LBM + "/data" + "/run_tilt_angle" + str(tilt_angle) + "_R2" + str(R2)\
+        runDirName = path_to_LBM + "/job_dirs" + "/run_tilt_angle" + str(tilt_angle) + "_R2" + str(R2)\
             + "_Rcurv" + str(R_curv) + "_angular_width" + str(angular_width)
         runDirs.append(runDirName)
         os.makedirs(runDirName, exist_ok=True)
@@ -171,7 +170,7 @@ def objective(X: torch.Tensor) -> torch.Tensor:
 
         # 2) run C++ simulation
         submit = subprocess.run(
-            ["sbatch", "submit_cirrus.slurm"],
+            ["sbatch", "submit.slurm"],
             cwd=runDirName,
             capture_output=True, text=True)
         if submit.returncode != 0:
